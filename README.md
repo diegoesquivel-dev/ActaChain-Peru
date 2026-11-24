@@ -26,11 +26,18 @@ Prototipo funcional del proyecto integrador **ActaChain Perú**, orientado a la 
 
 ```powershell
 npm.cmd install
-npm.cmd test
-npm.cmd start
+npm.cmd run demo
 ```
 
-Abra `http://localhost:3000`.
+El comando restaura las actas de demostración e inicia el servidor en `http://localhost:3005`. Mantenga abierta la terminal durante la demostración y use `Ctrl+C` para detenerlo.
+
+Para ejecutar las pruebas automatizadas antes de iniciar la demostración:
+
+```powershell
+npm.cmd test
+```
+
+Si solo desea restablecer los datos con el servidor detenido, ejecute `npm.cmd run reset:demo`.
 
 ## Prueba del portal independiente
 

@@ -7,6 +7,7 @@
     "test": "npm run test --workspace=chaincode && npm run test --workspace=api-gateway",
     "start": "npm run start --workspace=api-gateway",
     "dev": "npm run dev --workspace=portal-web",
+    "demo": "node api-gateway/scripts/runDemo.js",
     "reset:demo": "node api-gateway/scripts/resetDemo.js"
   }
 }
