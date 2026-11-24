@@ -34,6 +34,7 @@ app.use((req, res, next) => {
 const dataDir = path.join(__dirname, "../data");
 const dataFile = path.join(dataDir, "database.json");
 const evidenceDir = path.join(__dirname, "../evidence");
+const evidenceFiles = new Map();
 fs.mkdirSync(dataDir, { recursive: true });
 fs.mkdirSync(evidenceDir, { recursive: true });
 
@@ -294,6 +295,7 @@ async function syncSeedPdfs() {
     const pdfBuffer = await createActaPdfBuffer(acta);
     const pdfName = `Acta-${acta.idActa}.pdf`;
     fs.writeFileSync(path.join(evidenceDir, pdfName), pdfBuffer);
+    evidenceFiles.set(pdfName, pdfBuffer);
     acta.hashImagen = sha256(pdfBuffer);
     acta.documento = { nombre: pdfName, url: `/evidence/${pdfName}`, tipo: "application/pdf" };
   }
@@ -305,6 +307,7 @@ const ready = syncSeedPdfs();
 async function resetToInitial() {
   database = structuredClone(initialDatabase);
   actas.clear();
+  evidenceFiles.clear();
   for (const acta of database.actas) {
     actas.set(actaMapKey(acta), acta);
   }
@@ -362,6 +365,7 @@ app.post("/api/actas", async (req, res) => {
   const generatedPdfPath = path.join(evidenceDir, generatedPdfName);
   const pdfBuffer = await createActaPdfBuffer(acta);
   fs.writeFileSync(generatedPdfPath, pdfBuffer);
+  evidenceFiles.set(generatedPdfName, pdfBuffer);
   acta.hashImagen = sha256(pdfBuffer);
   acta.documento = { nombre: generatedPdfName, url: `/evidence/${generatedPdfName}`, tipo: "application/pdf" };
 
@@ -701,7 +705,11 @@ app.get("/api/openapi.json", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => res.json({ status: "ok", service: "ActaChain Perú API" }));
-app.use("/evidence", express.static(evidenceDir));
+app.get("/evidence/:filename", (req, res) => {
+  const pdfBuffer = evidenceFiles.get(req.params.filename);
+  if (!pdfBuffer) return res.status(404).json({ error: "Documento no encontrado" });
+  res.type("application/pdf").send(pdfBuffer);
+});
 app.use(express.static(path.join(__dirname, "../../portal-web")));
 
 const port = Number(process.env.PORT || 3000);

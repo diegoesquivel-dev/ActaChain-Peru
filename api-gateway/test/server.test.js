@@ -1,6 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
 const { app, ready, resetToInitial } = require("../src/server");
 
 const sha256 = v => crypto.createHash("sha256").update(v).digest("hex");
@@ -133,6 +135,27 @@ test("P-03 y P-05: verificación local SHA-256 con PDF oficial, detección de al
     assert.equal(ev.coincide, false);
     assert.match(ev.selloIntegridad, /^[a-f0-9]{64}$/);
   } finally {
+    await new Promise(resolve => server.close(resolve));
+  }
+});
+
+test("P-03: los PDF mantienen su hash si otra instancia regenera los archivos compartidos", async () => {
+  const { server, baseUrl } = await startTestServer();
+  try {
+    execFileSync(process.execPath, [
+      "-e",
+      "require('./api-gateway/src/server').ready.then(() => process.exit(0), error => { console.error(error); process.exit(1); })"
+    ], { cwd: path.join(__dirname, "../..") });
+
+    for (const id of ["079168-10", "079168-11", "079168-12"]) {
+      const acta = await (await fetch(`${baseUrl}/api/actas/PRES/${id}`)).json();
+      const pdfResponse = await fetch(`${baseUrl}${acta.documento.url}`);
+      const pdf = Buffer.from(await pdfResponse.arrayBuffer());
+      assert.equal(pdfResponse.status, 200);
+      assert.equal(sha256(pdf), acta.hashImagen);
+    }
+  } finally {
+    await resetToInitial();
     await new Promise(resolve => server.close(resolve));
   }
 });
