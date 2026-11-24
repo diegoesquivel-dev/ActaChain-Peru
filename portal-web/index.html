@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ActaChain Perú | Consultas electorales</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="institutional-header">
+    <div class="header-main">
+      <button class="brand" data-view="inicio" aria-label="Ir al inicio">
+        <span class="brand-mark"><span class="brand-hand">⌁</span></span>
+        <span class="brand-copy">
+          <strong>ActaChain</strong>
+          <small>PERÚ</small>
+        </span>
+      </button>
+      <div class="electoral-title">
+        <strong>Consultas Electorales</strong>
+        <span>Proceso electoral 2026</span>
+      </div>
+      <div class="header-tools">
+        <span class="secure-badge">Verificación digital</span>
+        <button class="circle-button" aria-label="Ayuda" data-view="ayuda">?</button>
+      </div>
+    </div>
+    <nav class="main-nav" aria-label="Navegación principal">
+      <button class="nav-item active" data-view="inicio">Inicio</button>
+      <button class="nav-item" data-view="consulta">Consultar acta</button>
+      <button class="nav-item" data-view="registro">Registrar acta</button>
+      <button class="nav-item" data-view="seguimiento">Seguimiento</button>
+      <button class="nav-item" data-view="ayuda">Ayuda</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="view active" id="inicio">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="section-label">CONSULTA ELECTORAL DIGITAL</p>
+          <h1>Consulta y verifica<br>el acta de tu mesa</h1>
+          <p class="hero-description">Conoce el estado del acta, revisa los resultados registrados y comprueba si el archivo corresponde al original.</p>
+          <button class="primary-button" data-view="consulta">Consultar una acta</button>
+          <button class="text-button" data-view="ayuda">¿Cómo funciona?</button>
+        </div>
+        <div class="hero-graphic" aria-hidden="true">
+          <div class="document-card">
+            <div class="document-head"><span></span><span></span><span></span></div>
+            <div class="document-lines"><i></i><i></i><i></i><i></i></div>
+            <div class="check-seal">✓</div>
+          </div>
+          <div class="search-disc"><span>⌕</span></div>
+          <div class="hero-vote"><b>Acta</b><span>Verificada</span></div>
+        </div>
+      </div>
+
+      <section class="quick-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">ACCIONES PRINCIPALES</p>
+            <h2>¿Qué deseas hacer?</h2>
+          </div>
+        </div>
+        <div class="action-grid">
+          <button class="action-card" data-view="consulta">
+            <span class="action-icon">⌕</span>
+            <span><strong>Buscar un acta</strong><small>Consulta por el código de mesa</small></span>
+            <b>›</b>
+          </button>
+          <button class="action-card" data-view="registro">
+            <span class="action-icon">＋</span>
+            <span><strong>Registrar un acta</strong><small>Ingresa los datos de una mesa</small></span>
+            <b>›</b>
+          </button>
+          <button class="action-card" data-view="seguimiento">
+            <span class="action-icon">◫</span>
+            <span><strong>Ver seguimiento</strong><small>Revisa actas y movimientos</small></span>
+            <b>›</b>
+          </button>
+        </div>
+      </section>
+
+      <section class="process-banner">
+        <div><span class="step-number">1</span><strong>Ingresa el código</strong><small>Busca el acta correspondiente</small></div>
+        <i></i>
+        <div><span class="step-number">2</span><strong>Revisa la información</strong><small>Consulta votos y estado</small></div>
+        <i></i>
+        <div><span class="step-number">3</span><strong>Comprueba el archivo</strong><small>Verifica que no haya cambios</small></div>
+      </section>
+    </section>
+
+    <section class="view" id="consulta">
+      <div class="page-heading">
+        <div>
+          <p class="breadcrumb">Inicio / Consulta de actas</p>
+          <h1>Consulta tu acta electoral</h1>
+        </div>
+      </div>
+      <div class="search-panel">
+        <label for="actaId">Código de mesa o acta</label>
+        <div class="search-controls">
+          <input id="actaId" value="079168-10" placeholder="Ejemplo: 079168-10" autocomplete="off">
+          <button class="primary-button" id="consultar">Consultar</button>
+        </div>
+        <div class="search-examples">
+          Actas disponibles:
+          <button class="example-code" data-code="079168-10">079168-10</button>
+          <button class="example-code" data-code="079168-11">079168-11</button>
+          <button class="example-code" data-code="079168-12">079168-12</button>
+        </div>
+      </div>
+
+      <div id="result-empty" class="empty-result">
+        <div class="empty-icon">⌕</div>
+        <h2>Busca una acta para ver su información</h2>
+        <p>Puedes escribir un código o seleccionar uno de los ejemplos.</p>
+      </div>
+
+      <div id="acta-result" class="acta-result" hidden>
+        <article class="result-summary">
+          <div class="summary-status">
+            <div class="status-icon" id="status-icon">✓</div>
+            <div>
+              <p class="section-label">ACTA ELECTORAL</p>
+              <h2 id="summary-id">079168-10</h2>
+            </div>
+            <span class="status-pill" id="summary-status">Registrada</span>
+          </div>
+          <div class="summary-meta">
+            <div><small>Tipo de elección</small><strong id="summary-type">Presidencial</strong></div>
+            <div><small>Distrito</small><strong id="summary-district">-</strong></div>
+            <div><small>Local de votación</small><strong id="summary-local">-</strong></div>
+          </div>
+        </article>
+
+        <div class="result-grid">
+          <article class="result-card">
+            <div class="card-title">
+              <h3>Resultados del acta</h3>
+              <span id="summary-total">100 votos emitidos</span>
+            </div>
+            <div id="votos-list" class="votos-list"></div>
+            <button class="detail-button" id="open-detail">Ver información completa</button>
+          </article>
+
+          <article class="result-card verification-card">
+            <div class="card-title">
+              <h3>Comprobación de integridad</h3>
+            </div>
+            <p class="card-description">Selecciona la copia del acta que tengas y verifica que coincida con el archivo registrado.</p>
+            <div id="attached-document" class="attached-document" hidden>
+              <div><span class="document-icon">▤</span><div><strong id="attached-name">Acta adjunta</strong><small>Documento oficial de la mesa</small></div></div>
+              <div class="document-actions">
+                <button type="button" id="view-document">Ver documento</button>
+              </div>
+            </div>
+            <label class="file-drop" for="archivo">
+              <span class="upload-icon">⇧</span>
+              <strong>Seleccionar archivo</strong>
+              <small id="file-name">PDF, TXT, JPG o PNG</small>
+              <input id="archivo" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg">
+            </label>
+            <button class="secondary-button" id="verificar">Comprobar archivo</button>
+            <div id="verification-result" class="verification-result" hidden></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="registro">
+      <div class="page-heading">
+        <div>
+          <p class="breadcrumb">Inicio / Registro</p>
+          <h1>Registrar un acta</h1>
+        </div>
+      </div>
+      <div class="registration-layout">
+        <article class="form-card">
+          <div class="form-heading">
+            <span>1</span>
+            <div><strong>Datos de la mesa</strong><small>Completa la información correspondiente al acta.</small></div>
+          </div>
+          <div class="form-grid">
+            <label>Código de acta<input id="new-id" value="079168-13"></label>
+            <label>Tipo de elección
+              <select id="new-type"><option value="PRES">Presidencial</option><option value="SEN_U">Senadores</option><option value="DIP">Diputados</option></select>
+            </label>
+            <label>Código geográfico<input id="new-ubigeo" value="150101" maxlength="6"></label>
+            <label>Departamento<input id="new-departamento" value="Lima"></label>
+            <label>Provincia<input id="new-provincia" value="Lima"></label>
+            <label>Distrito<input id="new-distrito" value="San Borja"></label>
+            <label>Local de votación<input id="new-local" value="IE 0015 San Juan"></label>
+          </div>
+          <div class="form-heading vote-heading">
+            <span>2</span>
+            <div><strong>Votos registrados</strong><small>Ingresa los resultados consignados en el acta.</small></div>
+          </div>
+          <div id="candidate-editor" class="candidate-editor">
+            <div class="candidate-row">
+              <input class="candidate-name" value="Organización 1" aria-label="Organización o candidato">
+              <input class="candidate-votes" type="number" min="0" value="55" aria-label="Votos">
+              <button type="button" class="remove-candidate" aria-label="Eliminar">×</button>
+            </div>
+            <div class="candidate-row">
+              <input class="candidate-name" value="Organización 2" aria-label="Organización o candidato">
+              <input class="candidate-votes" type="number" min="0" value="35" aria-label="Votos">
+              <button type="button" class="remove-candidate" aria-label="Eliminar">×</button>
+            </div>
+          </div>
+          <div class="candidate-actions">
+            <button type="button" class="detail-button" id="add-candidate">+ Agregar organización o candidato</button>
+            <span>Votos en blanco</span>
+            <input id="vb" type="number" min="0" value="5">
+            <span>Votos nulos</span>
+            <input id="vn" type="number" min="0" value="5">
+          </div>
+          <button class="primary-button wide" id="registrar">Registrar acta</button>
+        </article>
+        <aside class="registration-help">
+          <h3>Antes de registrar</h3>
+          <p>Verifica que el código corresponde a la mesa y que los datos coinciden con el acta física.</p>
+          <div class="info-item"><span>01</span><div><strong>Identifica</strong><small>Usa el código impreso en el acta.</small></div></div>
+          <div class="info-item"><span>02</span><div><strong>Completa</strong><small>Ingresa el conteo de votos.</small></div></div>
+          <div class="info-item"><span>03</span><div><strong>Confirma</strong><small>Revisa el comprobante generado.</small></div></div>
+        </aside>
+      </div>
+      <div id="registration-result" class="registration-result" hidden></div>
+    </section>
+
+    <section class="view" id="seguimiento">
+      <div class="page-heading">
+        <div>
+          <p class="breadcrumb">Inicio / Seguimiento</p>
+          <h1>Seguimiento de actas</h1>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <article><span class="stat-icon">▤</span><div><small>Actas disponibles</small><strong id="count-actas">-</strong></div></article>
+        <article><span class="stat-icon">◷</span><div><small>Movimientos registrados</small><strong id="count-blocks">-</strong></div></article>
+        <article><span class="stat-icon">✓</span><div><small>Verificación digital</small><strong id="verification-status">Sin cambios detectados</strong></div></article>
+      </div>
+      <article class="ledger-card">
+        <div class="card-title"><h3>Actas y movimientos</h3></div>
+        <div class="table-head"><span>Mesa</span><span>Tipo</span><span>Estado</span><span>Acción</span></div>
+        <div id="ledger-actas" class="ledger-table"></div>
+      </article>
+    </section>
+
+    <section class="view" id="ayuda">
+      <div class="page-heading">
+        <div>
+          <p class="breadcrumb">Inicio / Ayuda</p>
+          <h1>Cómo usar esta consulta</h1>
+        </div>
+      </div>
+      <div class="help-grid">
+        <article><span>01</span><h3>Busca el acta</h3><p>Ingresa el código de mesa o selecciona un ejemplo disponible.</p></article>
+        <article><span>02</span><h3>Revisa la información</h3><p>Consulta el estado, los votos registrados y los datos generales del acta.</p></article>
+        <article><span>03</span><h3>Verifica una copia</h3><p>Descarga una copia de referencia o usa una copia propia para comprobarla.</p></article>
+      </div>
+      <article class="notice-card">
+        <strong>Información sobre el uso</strong>
+        <p>Esta consulta presenta el flujo de verificación de actas electorales y mantiene separada la evidencia documental del registro electoral.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>ActaChain Perú</strong><small>Consulta y verificación electoral</small></div>
+    <div><strong>Servicio disponible</strong><small>Proceso electoral 2026</small></div>
+  </footer>
+
+  <dialog id="detail-dialog">
+    <div class="dialog-head">
+      <div><p class="section-label">INFORMACIÓN COMPLETA</p><h2 id="dialog-title">Acta electoral</h2></div>
+      <button id="close-detail" aria-label="Cerrar">×</button>
+    </div>
+    <pre id="detail-content"></pre>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

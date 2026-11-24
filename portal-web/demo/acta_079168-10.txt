@@ -1,0 +1,11 @@
+ACTA DE ESCRUTINIO - EJEMPLO DEMOSTRATIVO
+Mesa: 079168-10
+Tipo de eleccion: PRES
+Ubigeo: 220901
+Lista P1: 60 votos
+Lista P2: 30 votos
+Votos en blanco: 5
+Votos nulos: 5
+Total emitido: 100
+Estado: REGISTRADA
+Archivo de prueba para verificacion SHA-256

@@ -1,0 +1,18 @@
+services:
+  api-gateway:
+    image: node:24-alpine
+    working_dir: /workspace/api-gateway
+    volumes:
+      - .:/workspace
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3000:3000"
+
+  portal-web:
+    image: node:24-alpine
+    working_dir: /workspace/portal-web
+    volumes:
+      - .:/workspace
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"

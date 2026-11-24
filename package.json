@@ -1,0 +1,11 @@
+{
+  "name": "actachain-peru",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["chaincode", "api-gateway", "portal-web"],
+  "scripts": {
+    "test": "npm run test --workspace=chaincode && npm run test --workspace=api-gateway",
+    "start": "npm run start --workspace=api-gateway",
+    "dev": "npm run dev --workspace=portal-web"
+  }
+}
