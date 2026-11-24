@@ -1,0 +1,108 @@
+INFORME DE CAMBIOS REALIZADOS - RAMA: Rama-Huanuco
+Proyecto: ActaChain Perú (Evaluación Continua 3 - Proyecto Integrador)
+Fecha: 24 de noviembre de 2026
+Base previa: rama main (commit 54aa26d)
+
+========================================================================
+1. RESUMEN GENERAL
+========================================================================
+Se revisó el documento integrador "EVALUACIÓN CONTINUA 3: PROYECTO INTEGRADOR ACTACHAIN PERÚ"
+y se completaron los módulos, reglas de negocio (R1 a R10), requisitos funcionales
+(RF01 a RF10), endpoints REST, vistas del portal web, configuraciones de red
+Hyperledger Fabric v3.0 SmartBFT, archivos de benchmark para Hyperledger Caliper,
+especificación OpenAPI 3.0 y pruebas funcionales P-01 a P-05 sobre el avance inicial.
+
+========================================================================
+2. DETALLE DE CAMBIOS POR COMPONENTE
+========================================================================
+
+A. Contratos Inteligentes (chaincode/)
+- chaincode/src/actaContract.js:
+  * Se completaron todas las reglas R1 a R10 descritas en la Tabla 10 y Capítulo 5.
+  * Se verificó en registrarActa el límite de electoresHabiles (R4) y la asignación
+    automática del JEE competente según ubigeo (RF03) cuando existe error aritmético.
+  * Se implementó contabilizarActa() para la transición REGISTRADA -> CONTABILIZADA
+    respetando la máquina de estados (R5) y el endoso conjunto ONPE AND JNE (R8).
+  * Se implementó observarActa() para el rol SUPERVISOR_COMPUTO (ONPEMSP).
+  * Se implementó registrarEjemplarJEE() para el rol JEE_SECRETARIO (JNEMSP) con
+    verificación de competencia territorial R6 y cotejo de hashes contra la ODPE.
+  * Se implementó resolverActa() para JEE_MAGISTRADO / JNE_PLENO (RESOLUCION_JEE).
+  * Se reforzó recuento() con validación de competencia territorial R6 (cert.jee == acta.jee),
+    límite de electores hábiles y conservación obligatoria de votosAnteriores (R10).
+  * Se implementó proclamar() y consultarProclamacion() con bloqueo R9 si existen actas
+    en estado OBSERVADA o REGISTRADA, y cálculo determinista de la raíz de Merkle
+    SHA-256 sobre todas las actas computadas del ámbito (RF07).
+- chaincode/src/custodiaContract.js:
+  * Se añadió verificación de plazo en registrarConstancia() (R7: antes de proclamación).
+  * Se implementaron registrarNulidad() y resolverNulidad() (RF06), validando el plazo
+    máximo legal de 3 días según Ley N.° 26859 art. 363 (R7).
+- chaincode/test/actaContract.test.js:
+  * Ampliado de 3 a 7 pruebas unitarias cubriendo R1–R10, P-01, P-04, competencia R6,
+    conservación de votosAnteriores R10, bloqueo de proclamación R9, raíz de Merkle,
+    constancia de personeros y plazos R7.
+
+B. API Gateway REST (api-gateway/src/server.js y api-gateway/test/server.test.js)
+- Regla R4 corregida en POST /api/actas: en lugar de devolver HTTP 400 ante descuadre
+  aritmético, el acta se registra en estado OBSERVADA con motivo ERROR_ARITMETICO
+  y JEE competente asignado (jeeAsignado).
+- Nuevos endpoints del flujo TO-BE implementados:
+  * POST /api/actas/:tipo/:id/contabilizar (endoso ONPE AND JNE simulado).
+  * POST /api/actas/:tipo/:id/observar (SUPERVISOR_COMPUTO).
+  * POST /api/actas/:tipo/:id/ejemplar-jee (JEE_SECRETARIO + cotejo de hashes + R6).
+  * POST /api/actas/:tipo/:id/resolver (JEE_MAGISTRADO / JNE_PLENO + R6).
+  * POST /api/actas/:tipo/:id/recuento (JEE_MAGISTRADO + R6 + votosAnteriores R10).
+  * POST /api/actas/:tipo/:id/constancia (PERSONERO + bloqueo tras proclamación R7).
+  * POST /api/actas/:tipo/:id/nulidad (JEE_SECRETARIO / PERSONERO + plazo 3 días R7).
+  * POST /api/proclamacion y GET /api/proclamaciones (bloqueo R9 + raíz de Merkle).
+  * GET  /api/actas/buscar/:id (búsqueda por código sin requerir tipo de elección).
+  * GET  /api/actas/:tipo/:id/constancia-evidencia (RF10: genera constancia criptográfica
+    firmada con selloIntegridad SHA-256 para trámite ante el JEE).
+  * POST /api/verify/votos (comparación de votos de copia física frente al ledger).
+  * GET  /api/outbox, POST /api/outbox/enqueue, POST /api/outbox/flush (patrón Outbox RNF04).
+  * GET  /api/openapi.json (documentación OpenAPI 3.0.3 según RNF10).
+- Seguridad y control de API Gateway (RNF05): cabeceras X-Content-Type-Options /
+  X-Frame-Options y limitación de tasa en memoria (HTTP 429).
+- Soporte de votos IMPUGNADOS en el PDF generado por PDFKit y sincronización
+  determinista de inicialización (ready / resetToInitial) para pruebas limpias.
+- api-gateway/test/server.test.js: ampliado de 2 a 6 pruebas de integración cubriendo
+  OpenAPI 3.0, P-01, P-02, P-03, P-04, P-05 y el ciclo TO-BE completo.
+
+C. Portal Web Ciudadano y Consorcio (portal-web/)
+- Se conservó el diseño visual institucional original (colores, tarjetas, tipografía).
+- portal-web/index.html, portal-web/app.js y portal-web/styles.css:
+  * En "Consultar acta": selector de tipo de elección (PRES, SEN_U, SEN_M, DIP, PAND o
+    cualquier tipo), descarga directa de PDF, panel visible de trazabilidad criptográfica
+    e historial de bloques y txId (P-02 / RF08), visualización comparada de hash local
+    vs hash oficial (P-03 / P-05), visualización de votosAnteriores tras recuentos (R10)
+    y botón para exportar la constancia criptográfica firmada en JSON (RF10).
+  * En "Registrar acta": soporte de votos impugnados, electores hábiles, total declarado
+    opcional para probar R4 (OBSERVADA) y selector de rol simulado (OPERADOR_ODPE vs
+    AUDITOR_NODO de RENIECMSP para demostrar P-04 desde la interfaz).
+  * Nueva pestaña "Gestión JEE / Consorcio": formularios interactivos para contabilizar
+    actas (endoso ONPE-JNE), registrar recuento del JEE, registrar constancias de
+    personeros y ejecutar la proclamación calculando la raíz de Merkle (R9).
+  * En "Seguimiento": vista de bloques recientes, proclamaciones con su raíz de Merkle y
+    estado de la cola Outbox.
+
+D. Red Hyperledger Fabric SmartBFT, Caliper y Documentación
+- network/configtx.yaml: perfil ActaChainSmartBFTChannel con las 4 organizaciones
+  (ONPEMSP, JNEMSP, RENIECMSP, DEFENSORIAMSP), 4 ordenadores SmartBFT (n=4, f=1) y
+  política de endoso AND('ONPEMSP.peer','JNEMSP.peer') según Tabla 8.
+- network/network.sh: parseo de comandos del Capítulo 9 (up, createChannel, deployCC,
+  down, -c, -bft, -ccn, -ccp, -ccl, -ccep) y validación de prerrequisitos Fabric v3.0.
+- caliper/benchmarks/actachain-benchmark.yaml y caliper/workloads/registrarActa.js:
+  escenarios de carga pico a 72 tx/s y lectura pública para evaluar P95 <= 5 s (Tabla 24).
+- docs/openapi.json: especificación OpenAPI 3.0.3 completa (RNF10).
+- docs/evidencias/REPORTE_PRUEBAS_EJECUTADAS.md: reporte de resultados reales de las
+  pruebas P-01 a P-05.
+- README.md y docs/DOCUMENTACION_DEL_SISTEMA.md actualizados con el nuevo alcance.
+
+========================================================================
+3. VERIFICACIÓN EJECUTADA
+========================================================================
+- `npm.cmd test`:
+  * chaincode: 7/7 pruebas aprobadas (0 fallos).
+  * api-gateway: 6/6 pruebas aprobadas (0 fallos).
+- Verificación HTTP en vivo sobre rutas /, /app.js, /styles.css, /health,
+  /api/openapi.json, /api/actas/PRES/079168-10 y /evidence/Acta-079168-10.pdf:
+  todas respondieron con código HTTP 200.

@@ -1,0 +1,188 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ActaChain Perú - API Gateway",
+    "version": "1.0.0",
+    "description": "API REST de integración, custodia y verificación pública de actas electorales sobre Hyperledger Fabric (RNF10)."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Entorno local de desarrollo y pruebas"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Estado del servicio API Gateway",
+        "responses": { "200": { "description": "Servicio operativo" } }
+      }
+    },
+    "/api/actas": {
+      "get": {
+        "summary": "Listar todas las actas registradas",
+        "responses": { "200": { "description": "Lista de actas electorales" } }
+      },
+      "post": {
+        "summary": "Registrar acta digitalizada (RF01, R1-R4)",
+        "parameters": [
+          { "name": "x-demo-role", "in": "header", "required": true, "schema": { "type": "string", "enum": ["OPERADOR_ODPE"] } },
+          { "name": "x-demo-msp", "in": "header", "required": false, "schema": { "type": "string", "default": "ONPEMSP" } }
+        ],
+        "responses": {
+          "201": { "description": "Acta registrada (REGISTRADA u OBSERVADA si hay descuadre aritmético R4)" },
+          "400": { "description": "Hashes o datos inválidos (R3)" },
+          "403": { "description": "Acceso denegado (R1)" },
+          "409": { "description": "Acta duplicada (R2)" }
+        }
+      }
+    },
+    "/api/actas/buscar/{id}": {
+      "get": {
+        "summary": "Buscar acta por código de mesa sin especificar tipo de elección",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Acta encontrada" }, "404": { "description": "No encontrada" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}": {
+      "get": {
+        "summary": "Consulta pública de acta, votos, hashes e historial (RF08, P-02)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Detalle del acta" }, "404": { "description": "Acta no encontrada" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/contabilizar": {
+      "post": {
+        "summary": "Contabilizar acta con endoso conjunto ONPE AND JNE (R5, R8)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "x-demo-role", "in": "header", "required": true, "schema": { "type": "string", "enum": ["SUPERVISOR_COMPUTO", "JEE_MAGISTRADO"] } }
+        ],
+        "responses": { "200": { "description": "Acta contabilizada" }, "403": { "description": "Sin permiso" }, "409": { "description": "Transición inválida" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/observar": {
+      "post": {
+        "summary": "Marcar acta como OBSERVADA asignando JEE competente (RF03, R5)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Acta observada" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/ejemplar-jee": {
+      "post": {
+        "summary": "Registrar ejemplar del JEE y cotejar hashes (RF04, R6)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Ejemplar JEE registrado" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/resolver": {
+      "post": {
+        "summary": "Emitir resolución del JEE sobre acta observada (RF04, R5, R6)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Acta resuelta" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/recuento": {
+      "post": {
+        "summary": "Registrar recuento del JEE conservando votosAnteriores (RF04, R6, R10)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Recuento registrado" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/constancia": {
+      "post": {
+        "summary": "Registrar constancia de copia de personero (RF05, R7)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "201": { "description": "Constancia registrada" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/nulidad": {
+      "post": {
+        "summary": "Registrar pedido de nulidad dentro de 3 días (RF06, R7)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "201": { "description": "Nulidad registrada" } }
+      }
+    },
+    "/api/actas/{tipo}/{id}/constancia-evidencia": {
+      "get": {
+        "summary": "Exportar constancia criptográfica firmada para trámite ante JEE (RF10, P-05)",
+        "parameters": [
+          { "name": "tipo", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "hashArchivo", "in": "query", "required": false, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Constancia criptográfica con selloIntegridad SHA-256" } }
+      }
+    },
+    "/api/verify/sha256": {
+      "post": {
+        "summary": "Comparar hash SHA-256 calculado en cliente contra hash oficial (RF09, P-03, P-05)",
+        "responses": { "200": { "description": "Resultado de verificación criptográfica" } }
+      }
+    },
+    "/api/verify/votos": {
+      "post": {
+        "summary": "Comparar conteo de votos de copia física contra registro oficial",
+        "responses": { "200": { "description": "Resultado de comparación por organización" } }
+      }
+    },
+    "/api/proclamacion": {
+      "post": {
+        "summary": "Proclamar resultados calculando raíz de Merkle (RF07, R9)",
+        "responses": { "201": { "description": "Proclamación emitida" }, "409": { "description": "Bloqueada por actas pendientes u observadas (R9)" } }
+      }
+    },
+    "/api/proclamaciones": {
+      "get": {
+        "summary": "Listar proclamaciones registradas",
+        "responses": { "200": { "description": "Proclamaciones y raíces de Merkle" } }
+      }
+    },
+    "/api/outbox": {
+      "get": {
+        "summary": "Consultar eventos pendientes en cola local Outbox (RNF04)",
+        "responses": { "200": { "description": "Cola outbox" } }
+      }
+    },
+    "/api/outbox/enqueue": {
+      "post": {
+        "summary": "Encolar evento ante desconexión temporal de red (RNF04)",
+        "responses": { "202": { "description": "Evento encolado" } }
+      }
+    },
+    "/api/outbox/flush": {
+      "post": {
+        "summary": "Reenviar eventos pendientes del outbox al reconectar (RNF04)",
+        "responses": { "200": { "description": "Eventos procesados" } }
+      }
+    },
+    "/api/blocks": {
+      "get": {
+        "summary": "Listar bloques y eventos ordenados en el ledger",
+        "responses": { "200": { "description": "Historial de bloques" } }
+      }
+    }
+  }
+}

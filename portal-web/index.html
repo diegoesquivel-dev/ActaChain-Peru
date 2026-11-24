@@ -29,6 +29,7 @@
       <button class="nav-item active" data-view="inicio">Inicio</button>
       <button class="nav-item" data-view="consulta">Consultar acta</button>
       <button class="nav-item" data-view="registro">Registrar acta</button>
+      <button class="nav-item" data-view="gestion">Gestión JEE / Consorcio</button>
       <button class="nav-item" data-view="seguimiento">Seguimiento</button>
       <button class="nav-item" data-view="ayuda">Ayuda</button>
     </nav>
@@ -73,9 +74,9 @@
             <span><strong>Registrar un acta</strong><small>Ingresa los datos de una mesa</small></span>
             <b>›</b>
           </button>
-          <button class="action-card" data-view="seguimiento">
-            <span class="action-icon">◫</span>
-            <span><strong>Ver seguimiento</strong><small>Revisa actas y movimientos</small></span>
+          <button class="action-card" data-view="gestion">
+            <span class="action-icon">⚖</span>
+            <span><strong>Gestión JEE y Proclamación</strong><small>Endoso, recuentos y Merkle</small></span>
             <b>›</b>
           </button>
         </div>
@@ -98,8 +99,16 @@
         </div>
       </div>
       <div class="search-panel">
-        <label for="actaId">Código de mesa o acta</label>
-        <div class="search-controls">
+        <label for="actaId">Código de mesa o acta y tipo de elección</label>
+        <div class="search-controls search-controls-ext">
+          <select id="search-type" aria-label="Tipo de elección">
+            <option value="AUTO">Cualquier tipo</option>
+            <option value="PRES" selected>Presidencial (PRES)</option>
+            <option value="SEN_U">Senadores Único (SEN_U)</option>
+            <option value="SEN_M">Senadores Múltiple (SEN_M)</option>
+            <option value="DIP">Diputados (DIP)</option>
+            <option value="PAND">Parlamento Andino (PAND)</option>
+          </select>
           <input id="actaId" value="079168-10" placeholder="Ejemplo: 079168-10" autocomplete="off">
           <button class="primary-button" id="consultar">Consultar</button>
         </div>
@@ -129,7 +138,7 @@
           </div>
           <div class="summary-meta">
             <div><small>Tipo de elección</small><strong id="summary-type">Presidencial</strong></div>
-            <div><small>Distrito</small><strong id="summary-district">-</strong></div>
+            <div><small>Distrito / JEE</small><strong id="summary-district">-</strong></div>
             <div><small>Local de votación</small><strong id="summary-local">-</strong></div>
           </div>
         </article>
@@ -141,18 +150,20 @@
               <span id="summary-total">100 votos emitidos</span>
             </div>
             <div id="votos-list" class="votos-list"></div>
-            <button class="detail-button" id="open-detail">Ver información completa</button>
+            <div id="votos-anteriores-box" class="votos-anteriores-box" hidden></div>
+            <button class="detail-button" id="open-detail">Ver JSON completo en el ledger</button>
           </article>
 
           <article class="result-card verification-card">
             <div class="card-title">
-              <h3>Comprobación de integridad</h3>
+              <h3>Comprobación de integridad (SHA-256)</h3>
             </div>
-            <p class="card-description">Selecciona la copia del acta que tengas y verifica que coincida con el archivo registrado.</p>
+            <p class="card-description">Selecciona la copia del acta que tengas y verifica localmente en tu navegador (sin subir el archivo al servidor) que coincida con la huella registrada.</p>
             <div id="attached-document" class="attached-document" hidden>
               <div><span class="document-icon">▤</span><div><strong id="attached-name">Acta adjunta</strong><small>Documento oficial de la mesa</small></div></div>
               <div class="document-actions">
                 <button type="button" id="view-document">Ver documento</button>
+                <a id="download-document" href="#" download>Descargar</a>
               </div>
             </div>
             <label class="file-drop" for="archivo">
@@ -162,9 +173,26 @@
               <input id="archivo" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg">
             </label>
             <button class="secondary-button" id="verificar">Comprobar archivo</button>
+            <div id="hash-comparison" class="hash-comparison" hidden></div>
             <div id="verification-result" class="verification-result" hidden></div>
+            <button class="detail-button export-btn" id="export-evidence" type="button">Exportar constancia criptográfica firmada (RF10)</button>
           </article>
         </div>
+
+        <article class="result-card trace-card" id="trace-card">
+          <div class="card-title">
+            <h3>Trazabilidad criptográfica e historial inmutable (P-02 / RF08)</h3>
+            <span id="trace-jee">JEE</span>
+          </div>
+          <div class="hash-meta-grid">
+            <div><small>Hash SHA-256 de imagen oficial</small><code id="trace-hash-img">-</code></div>
+            <div><small>Hash SHA-256 de datos JSON</small><code id="trace-hash-data">-</code></div>
+            <div><small>Firmante / MSP / Endosos</small><code id="trace-signer">-</code></div>
+          </div>
+          <h4 class="sub-title">Historial de eventos y bloques</h4>
+          <div id="historial-list" class="historial-list"></div>
+          <div id="constancias-list" class="constancias-list" hidden></div>
+        </article>
       </div>
     </section>
 
@@ -179,18 +207,31 @@
         <article class="form-card">
           <div class="form-heading">
             <span>1</span>
-            <div><strong>Datos de la mesa</strong><small>Completa la información correspondiente al acta.</small></div>
+            <div><strong>Datos de la mesa e identidad</strong><small>Completa la información correspondiente al acta.</small></div>
           </div>
           <div class="form-grid">
             <label>Código de acta<input id="new-id" value="079168-13"></label>
             <label>Tipo de elección
-              <select id="new-type"><option value="PRES">Presidencial</option><option value="SEN_U">Senadores</option><option value="DIP">Diputados</option></select>
+              <select id="new-type">
+                <option value="PRES">Presidencial</option>
+                <option value="SEN_U">Senadores Único</option>
+                <option value="SEN_M">Senadores Múltiple</option>
+                <option value="DIP">Diputados</option>
+                <option value="PAND">Parlamento Andino</option>
+              </select>
             </label>
-            <label>Código geográfico<input id="new-ubigeo" value="150101" maxlength="6"></label>
+            <label>Código geográfico (Ubigeo)<input id="new-ubigeo" value="150101" maxlength="6"></label>
             <label>Departamento<input id="new-departamento" value="Lima"></label>
             <label>Provincia<input id="new-provincia" value="Lima"></label>
             <label>Distrito<input id="new-distrito" value="San Borja"></label>
             <label>Local de votación<input id="new-local" value="IE 0015 San Juan"></label>
+            <label>Electores hábiles<input id="habiles" type="number" min="1" value="300"></label>
+            <label>Perfil / Credencial simulada
+              <select id="reg-role">
+                <option value="OPERADOR_ODPE|ONPEMSP">OPERADOR_ODPE (ONPEMSP)</option>
+                <option value="AUDITOR_NODO|RENIECMSP">AUDITOR_NODO (RENIECMSP - prueba P-04)</option>
+              </select>
+            </label>
           </div>
           <div class="form-heading vote-heading">
             <span>2</span>
@@ -208,42 +249,110 @@
               <button type="button" class="remove-candidate" aria-label="Eliminar">×</button>
             </div>
           </div>
-          <div class="candidate-actions">
-            <button type="button" class="detail-button" id="add-candidate">+ Agregar organización o candidato</button>
-            <span>Votos en blanco</span>
-            <input id="vb" type="number" min="0" value="5">
-            <span>Votos nulos</span>
-            <input id="vn" type="number" min="0" value="5">
+          <div class="candidate-actions candidate-actions-ext">
+            <button type="button" class="detail-button" id="add-candidate">+ Agregar organización</button>
+            <label class="inline-field"><span>Blancos</span><input id="vb" type="number" min="0" value="5"></label>
+            <label class="inline-field"><span>Nulos</span><input id="vn" type="number" min="0" value="5"></label>
+            <label class="inline-field"><span>Impugnados</span><input id="vi" type="number" min="0" value="0"></label>
+            <label class="inline-field"><span>Total declarado (opcional R4)</span><input id="emitidos-override" type="number" min="0" placeholder="Auto"></label>
           </div>
           <button class="primary-button wide" id="registrar">Registrar acta</button>
         </article>
         <aside class="registration-help">
           <h3>Antes de registrar</h3>
           <p>Verifica que el código corresponde a la mesa y que los datos coinciden con el acta física.</p>
-          <div class="info-item"><span>01</span><div><strong>Identifica</strong><small>Usa el código impreso en el acta.</small></div></div>
-          <div class="info-item"><span>02</span><div><strong>Completa</strong><small>Ingresa el conteo de votos.</small></div></div>
-          <div class="info-item"><span>03</span><div><strong>Confirma</strong><small>Revisa el comprobante generado.</small></div></div>
+          <div class="info-item"><span>01</span><div><strong>Identifica (R1/R2)</strong><small>Solo OPERADOR_ODPE de ONPE registra y sin duplicados.</small></div></div>
+          <div class="info-item"><span>02</span><div><strong>Valida (R4)</strong><small>Si la suma difiere del total declarado, pasa a OBSERVADA automáticamente.</small></div></div>
+          <div class="info-item"><span>03</span><div><strong>Confirma</strong><small>Genera PDF, huella SHA-256 y transacción en ledger.</small></div></div>
         </aside>
       </div>
       <div id="registration-result" class="registration-result" hidden></div>
+    </section>
+
+    <section class="view" id="gestion">
+      <div class="page-heading">
+        <div>
+          <p class="breadcrumb">Inicio / Gestión JEE y Consorcio</p>
+          <h1>Flujo TO-BE: Endoso, JEE, Personeros y Proclamación</h1>
+        </div>
+      </div>
+      <div class="gestion-grid">
+        <article class="result-card">
+          <div class="card-title"><h3>1. Contabilizar Acta (Endoso ONPE + JNE)</h3><span>R5 / R8</span></div>
+          <p class="card-description">Transiciona un acta <strong>REGISTRADA</strong> (ej. 079168-10) a <strong>CONTABILIZADA</strong> mediante endoso conjunto.</p>
+          <div class="form-grid gestion-form">
+            <label>Código de acta<input id="gest-cont-id" value="079168-10"></label>
+            <label>Elección<select id="gest-cont-tipo"><option value="PRES">PRES</option><option value="SEN_U">SEN_U</option><option value="DIP">DIP</option></select></label>
+          </div>
+          <button class="primary-button wide" id="btn-contabilizar">Contabilizar con endoso ONPE-JNE</button>
+          <div id="res-contabilizar" class="registration-result" hidden></div>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title"><h3>2. Recuento / Resolución JEE</h3><span>RF04 / R6 / R10</span></div>
+          <p class="card-description">Resuelve un acta <strong>OBSERVADA</strong> (ej. 079168-11) conservando <code>votosAnteriores</code> en el historial.</p>
+          <div class="form-grid gestion-form">
+            <label>Código de acta<input id="gest-jee-id" value="079168-11"></label>
+            <label>Elección<select id="gest-jee-tipo"><option value="PRES">PRES</option><option value="SEN_U">SEN_U</option><option value="DIP">DIP</option></select></label>
+            <label>JEE Competente<input id="gest-jee-code" value="JEE-22"></label>
+            <label>Votos Org. 1 (recuento)<input id="gest-rec-p1" type="number" min="0" value="45"></label>
+            <label>Votos Org. 2 (recuento)<input id="gest-rec-p2" type="number" min="0" value="45"></label>
+            <label>Blancos / Nulos<input id="gest-rec-bn" type="text" value="5,5" title="blancos,nulos"></label>
+          </div>
+          <button class="secondary-button wide" id="btn-recuento">Registrar recuento (JEE Magistrado)</button>
+          <div id="res-recuento" class="registration-result" hidden></div>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title"><h3>3. Constancia de Personero</h3><span>RF05 / R7</span></div>
+          <p class="card-description">Registra la huella SHA-256 de la copia partidaria del acta antes de la proclamación.</p>
+          <div class="form-grid gestion-form">
+            <label>Código de acta<input id="gest-per-id" value="079168-10"></label>
+            <label>Elección<select id="gest-per-tipo"><option value="PRES">PRES</option><option value="SEN_U">SEN_U</option><option value="DIP">DIP</option></select></label>
+            <label>Organización política<input id="gest-per-org" value="PARTIDO_DEMO"></label>
+            <label>Hash SHA-256 de copia (opcional)<input id="gest-per-hash" placeholder="Auto si se deja vacío"></label>
+          </div>
+          <button class="primary-button wide" id="btn-constancia">Registrar constancia de personero</button>
+          <div id="res-constancia" class="registration-result" hidden></div>
+        </article>
+
+        <article class="result-card">
+          <div class="card-title"><h3>4. Proclamación y Raíz de Merkle</h3><span>RF07 / R9</span></div>
+          <p class="card-description">Se bloquea si existe algún acta en estado REGISTRADA u OBSERVADA. Calcula la raíz de Merkle de todas las actas cerradas.</p>
+          <div class="form-grid gestion-form">
+            <label>Ámbito<input id="gest-proc-ambito" value="NACIONAL"></label>
+            <label>Elección<select id="gest-proc-tipo"><option value="PRES">PRES</option><option value="SEN_U">SEN_U</option><option value="DIP">DIP</option></select></label>
+          </div>
+          <button class="secondary-button wide" id="btn-proclamar">Proclamar resultados (JNE Pleno)</button>
+          <div id="res-proclamar" class="registration-result" hidden></div>
+        </article>
+      </div>
     </section>
 
     <section class="view" id="seguimiento">
       <div class="page-heading">
         <div>
           <p class="breadcrumb">Inicio / Seguimiento</p>
-          <h1>Seguimiento de actas</h1>
+          <h1>Seguimiento de actas y bloques</h1>
         </div>
       </div>
       <div class="stats-grid">
         <article><span class="stat-icon">▤</span><div><small>Actas disponibles</small><strong id="count-actas">-</strong></div></article>
-        <article><span class="stat-icon">◷</span><div><small>Movimientos registrados</small><strong id="count-blocks">-</strong></div></article>
+        <article><span class="stat-icon">◷</span><div><small>Movimientos en bloques</small><strong id="count-blocks">-</strong></div></article>
         <article><span class="stat-icon">✓</span><div><small>Verificación digital</small><strong id="verification-status">Sin cambios detectados</strong></div></article>
       </div>
       <article class="ledger-card">
-        <div class="card-title"><h3>Actas y movimientos</h3></div>
+        <div class="card-title"><h3>Actas registradas</h3><span id="outbox-badge">Outbox: 0 pendientes</span></div>
         <div class="table-head"><span>Mesa</span><span>Tipo</span><span>Estado</span><span>Acción</span></div>
         <div id="ledger-actas" class="ledger-table"></div>
+      </article>
+      <article class="ledger-card">
+        <div class="card-title"><h3>Bloques y eventos recientes</h3><span>Ordenamiento SmartBFT (simulado)</span></div>
+        <div id="ledger-blocks" class="historial-list"></div>
+      </article>
+      <article class="ledger-card">
+        <div class="card-title"><h3>Proclamaciones y Raíces de Merkle</h3><span>R9</span></div>
+        <div id="ledger-proclamaciones" class="historial-list"></div>
       </article>
     </section>
 
@@ -256,12 +365,12 @@
       </div>
       <div class="help-grid">
         <article><span>01</span><h3>Busca el acta</h3><p>Ingresa el código de mesa o selecciona un ejemplo disponible.</p></article>
-        <article><span>02</span><h3>Revisa la información</h3><p>Consulta el estado, los votos registrados y los datos generales del acta.</p></article>
-        <article><span>03</span><h3>Verifica una copia</h3><p>Descarga una copia de referencia o usa una copia propia para comprobarla.</p></article>
+        <article><span>02</span><h3>Revisa la información</h3><p>Consulta el estado, los votos registrados, hashes e historial de bloques.</p></article>
+        <article><span>03</span><h3>Verifica una copia</h3><p>Descarga una copia de referencia o usa una copia propia para comprobarla sin subirla al servidor.</p></article>
       </div>
       <article class="notice-card">
         <strong>Información sobre el uso</strong>
-        <p>Esta consulta presenta el flujo de verificación de actas electorales y mantiene separada la evidencia documental del registro electoral.</p>
+        <p>Esta consulta presenta el flujo de verificación de actas electorales y mantiene separada la evidencia documental del registro electoral, cumpliendo la Ley N.° 29733 y la documentación OpenAPI 3.0 en <code>/api/openapi.json</code>.</p>
       </article>
     </section>
   </main>

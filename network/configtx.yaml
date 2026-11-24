@@ -1,0 +1,234 @@
+# Configuración de canal Hyperledger Fabric v3.x con consenso SmartBFT (n=4, f=1)
+# Según Capítulo 5 (Tabla 8) y Capítulo 6 (Reglamento de Gobernanza) de ActaChain Perú
+
+Organizations:
+  - &OrdererOrg
+      Name: ConsorcioElectoralOrderer
+      ID: OrdererMSP
+      MSPDir: organizations/ordererOrganizations/actachain.gob.pe/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Writers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Admins:
+          Type: Signature
+          Rule: "OR('OrdererMSP.admin')"
+
+  - &ONPE
+      Name: ONPEMSP
+      ID: ONPEMSP
+      MSPDir: organizations/peerOrganizations/onpe.gob.pe/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('ONPEMSP.admin', 'ONPEMSP.peer', 'ONPEMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('ONPEMSP.admin', 'ONPEMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('ONPEMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('ONPEMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.onpe.gob.pe
+          Port: 7051
+
+  - &JNE
+      Name: JNEMSP
+      ID: JNEMSP
+      MSPDir: organizations/peerOrganizations/jne.gob.pe/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('JNEMSP.admin', 'JNEMSP.peer', 'JNEMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('JNEMSP.admin', 'JNEMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('JNEMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('JNEMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.jne.gob.pe
+          Port: 9051
+
+  - &RENIEC
+      Name: RENIECMSP
+      ID: RENIECMSP
+      MSPDir: organizations/peerOrganizations/reniec.gob.pe/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('RENIECMSP.admin', 'RENIECMSP.peer', 'RENIECMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('RENIECMSP.admin', 'RENIECMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('RENIECMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('RENIECMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.reniec.gob.pe
+          Port: 10051
+
+  - &DEFENSORIA
+      Name: DEFENSORIAMSP
+      ID: DEFENSORIAMSP
+      MSPDir: organizations/peerOrganizations/defensoria.gob.pe/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('DEFENSORIAMSP.admin', 'DEFENSORIAMSP.peer', 'DEFENSORIAMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('DEFENSORIAMSP.admin', 'DEFENSORIAMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('DEFENSORIAMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('DEFENSORIAMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.defensoria.gob.pe
+          Port: 11051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V3_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: Signature
+      Rule: "AND('ONPEMSP.peer', 'JNEMSP.peer')"
+    Endorsement:
+      Type: Signature
+      Rule: "AND('ONPEMSP.peer', 'JNEMSP.peer')"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: BFT
+  Addresses:
+    - orderer.onpe.gob.pe:7050
+    - orderer.jne.gob.pe:8050
+    - orderer.reniec.gob.pe:9050
+    - orderer.defensoria.gob.pe:10050
+  SmartBFT:
+    RequestBatchMaxCount: 100
+    RequestBatchMaxBytes: 10485760
+    RequestBatchMaxInterval: 50ms
+    IncomingMessageBufferSize: 200
+    RequestPoolSize: 400
+    RequestForwardTimeout: 2s
+    RequestComplainTimeout: 20s
+    RequestAutoRemoveTimeout: 3m
+    ViewChangeResendInterval: 5s
+    ViewChangeTimeout: 20s
+    LeaderHeartbeatTimeout: 1m
+    LeaderHeartbeatCount: 10
+    CollectTimeout: 1s
+  ConsenterMapping:
+    - ID: 1
+      Host: orderer.onpe.gob.pe
+      Port: 7050
+      MSPID: ONPEMSP
+      Identity: organizations/peerOrganizations/onpe.gob.pe/orderers/orderer.onpe.gob.pe/msp/signcerts/cert.pem
+      ClientTLSCert: organizations/peerOrganizations/onpe.gob.pe/orderers/orderer.onpe.gob.pe/tls/server.crt
+      ServerTLSCert: organizations/peerOrganizations/onpe.gob.pe/orderers/orderer.onpe.gob.pe/tls/server.crt
+    - ID: 2
+      Host: orderer.jne.gob.pe
+      Port: 8050
+      MSPID: JNEMSP
+      Identity: organizations/peerOrganizations/jne.gob.pe/orderers/orderer.jne.gob.pe/msp/signcerts/cert.pem
+      ClientTLSCert: organizations/peerOrganizations/jne.gob.pe/orderers/orderer.jne.gob.pe/tls/server.crt
+      ServerTLSCert: organizations/peerOrganizations/jne.gob.pe/orderers/orderer.jne.gob.pe/tls/server.crt
+    - ID: 3
+      Host: orderer.reniec.gob.pe
+      Port: 9050
+      MSPID: RENIECMSP
+      Identity: organizations/peerOrganizations/reniec.gob.pe/orderers/orderer.reniec.gob.pe/msp/signcerts/cert.pem
+      ClientTLSCert: organizations/peerOrganizations/reniec.gob.pe/orderers/orderer.reniec.gob.pe/tls/server.crt
+      ServerTLSCert: organizations/peerOrganizations/reniec.gob.pe/orderers/orderer.reniec.gob.pe/tls/server.crt
+    - ID: 4
+      Host: orderer.defensoria.gob.pe
+      Port: 10050
+      MSPID: DEFENSORIAMSP
+      Identity: organizations/peerOrganizations/defensoria.gob.pe/orderers/orderer.defensoria.gob.pe/msp/signcerts/cert.pem
+      ClientTLSCert: organizations/peerOrganizations/defensoria.gob.pe/orderers/orderer.defensoria.gob.pe/tls/server.crt
+      ServerTLSCert: organizations/peerOrganizations/defensoria.gob.pe/orderers/orderer.defensoria.gob.pe/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 50
+    AbsoluteMaxBytes: 10 MB
+    PreferredMaxBytes: 2 MB
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  ActaChainSmartBFTChannel:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *ONPE
+        - *JNE
+        - *RENIEC
+        - *DEFENSORIA
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *ONPE
+        - *JNE
+        - *RENIEC
+        - *DEFENSORIA

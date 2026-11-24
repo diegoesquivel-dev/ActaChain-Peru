@@ -275,21 +275,20 @@ Servidor Express que:
 
 ### `chaincode`
 
-Contiene el contrato conceptual con reglas similares al diseño del documento:
+Contiene los contratos `ActaContract` y `CustodiaContract` con las reglas R1–R10 del documento:
 
-- Identidad y rol.
-- Unicidad.
-- Formato SHA-256.
-- Aritmética de votos.
-- Máquina de estados.
-- Recuento por JEE.
-- Constancias.
+- Identidad y rol (R1) y competencia JEE por ubigeo (R6).
+- Unicidad (R2) y formato SHA-256 (R3).
+- Aritmética de votos con transición automática a `OBSERVADA` (R4).
+- Máquina de estados (`contabilizarActa`, `observarActa`, `resolverActa`, `recuento` con `votosAnteriores`, `proclamar` con raíz de Merkle R9).
+- Custodia de personeros (`registrarConstancia`) y pedidos de nulidad dentro del plazo de 3 días (R7).
 
-Actualmente no está conectado al servidor Express ni a una red Fabric real.
+Actualmente las pruebas unitarias ejecutan los contratos con stubs deterministas de Hyperledger Fabric; el despliegue multi-nodo requiere Docker y los binarios Fabric v3.0.
 
-### `network`
+### `network` y `caliper`
 
-Contiene el punto de partida para desplegar Hyperledger Fabric y SmartBFT. Los binarios y la red real todavía no están desplegados.
+- `network/configtx.yaml` y `network/network.sh`: definen el canal `ActaChainSmartBFTChannel` con `ONPEMSP`, `JNEMSP`, `RENIECMSP` y `DEFENSORIAMSP`, política de endoso `AND('ONPEMSP.peer','JNEMSP.peer')` y 4 nodos ordenadores SmartBFT (`n=4, f=1`).
+- `caliper/benchmarks/actachain-benchmark.yaml` y `caliper/workloads/registrarActa.js`: escenarios de carga pico a 72 tx/s y lectura pública para validar `P95 <= 5 s`.
 
 ## 11. Cómo el sistema mejora el proceso actual
 

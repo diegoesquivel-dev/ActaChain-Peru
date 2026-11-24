@@ -1,0 +1,44 @@
+# Escenarios de evaluación de rendimiento, carga y resiliencia con Hyperledger Caliper
+# Basado en la Tabla 24 del Capítulo 9 (meta P95 <= 5 s a 72 tx/s)
+
+test:
+  name: ActaChain Peru - Benchmark SmartBFT
+  description: Evaluación de carga pico electoral (72 tx/s), lectura pública y robustez de reglas R1-R4
+  workers:
+    number: 4
+  rounds:
+    - label: registro-actas-pico-72tps
+      description: Carga sostenida de 72 tx/s para validar RNF01 y KPI-04 (P95 <= 5 s)
+      txDuration: 60
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 72
+      workload:
+        module: caliper/workloads/registrarActa.js
+        arguments:
+          contractId: actachain
+          tipoEleccion: PRES
+          ubigeo: "220901"
+
+    - label: consulta-publica-actas
+      description: Consultas de solo lectura sobre estado, hashes e historial (RF08)
+      txDuration: 30
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 120
+      workload:
+        module: caliper/workloads/registrarActa.js
+        arguments:
+          contractId: actachain
+          mode: read
+          tipoEleccion: PRES
+
+monitors:
+  resource:
+    - module: docker
+      options:
+        interval: 2
+        containers:
+          - all
