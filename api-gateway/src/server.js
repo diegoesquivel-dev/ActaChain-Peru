@@ -147,7 +147,7 @@ function createActaPdfBuffer(acta) {
     pdf.rect(36, 36, 523, 72).fill("#ffffff").stroke("#063f9f");
     pdf.rect(36, 36, 8, 72).fill(red);
     pdf.fontSize(20).fillColor(blue).text("ONPE", 56, 48);
-    pdf.fontSize(11).fillColor(ink).text("JURADO NACIONAL DE ELECCIÓN", 56, 76);
+    pdf.fontSize(11).fillColor(ink).text("JURADO NACIONAL DE ELECCIONES", 56, 76);
     pdf.fontSize(12).fillColor(blue).text("ACTA DE ESCRUTINIO", 310, 48, { align: "right", width: 230 });
     pdf.fontSize(9).fillColor(ink).text(`ACTA N.º ${acta.idActa}`, 310, 68, { align: "right", width: 230 });
     pdf.text("DOCUMENTO GENERADO DIGITALMENTE", 310, 84, { align: "right", width: 230 });

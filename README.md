@@ -2,6 +2,10 @@
 
 Prototipo funcional del proyecto integrador descrito en el documento adjunto.
 
+## Documentación de entrega
+
+La documentación funcional y técnica completa está disponible en [DOCUMENTACION_DEL_SISTEMA.md](docs/DOCUMENTACION_DEL_SISTEMA.md).
+
 ## Estado
 
 - Chaincode demostrativo con reglas de identidad, unicidad, SHA-256 y aritmética.
